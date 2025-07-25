@@ -6,37 +6,37 @@
 //
 
 import SwiftUI
-import Foundation
+import SwiftData
 
-class Friend {
-    var name: String
-    var birthday: Date
-    
-    init (name: String, birthday: Date) {
-        self.name = name
-        self.birthday = birthday
-    }
-    
-}
 struct ContentView: View {
-    @State private var friends: [Friend] = [
-        Friend(name: "Chaitra Sure", birthday: .now),
-        Friend(name: "Lynn Ryder", birthday: Date(timeIntervalSince1970: 0))
-    ]
+    @Query private var friends: [Friend]
+    @Environment(\.modelContext) private var context
+    
     
     @State private var newName = ""
     
     @State private var newBirthday = Date.now
     
+    func deleteFriend(at offsets: IndexSet) {
+        for index in offsets {
+            let friendToDelete = friends[index]
+            context.delete(friendToDelete)
+        }
+    }
     var body: some View {
         //  ZStack {
         NavigationStack {
-            List(friends, id: \.name) { friend in
-                HStack {
-                    Text(friend.name)
-                    Spacer()
-                    Text(friend.birthday, format: .dateTime.month(.wide).day().year())
+            List {
+                ForEach(friends) { friend in
+                    HStack {
+                        HStack {
+                            Text(friend.name)
+                            Spacer()
+                            Text(friend.birthday, format: .dateTime.month(.wide).day().year())
+                        }
+                    }
                 }
+                .onDelete(perform: deleteFriend)
             }
             .navigationTitle("Birthdays")
             .safeAreaInset(edge: .bottom) {
@@ -49,7 +49,7 @@ struct ContentView: View {
                     }
                     Button("Save") {
                         let newFriend = Friend(name: newName, birthday: newBirthday)
-                        friends.append(newFriend)
+                        context.insert(newFriend)
                         newName = ""
                         newBirthday = .now
                     }
@@ -59,10 +59,13 @@ struct ContentView: View {
                 .background(.bar)
             }
             //}
+            
         }
     }
 }
     #Preview {
         ContentView()
+            .modelContainer(for: Friend.self, inMemory: true)
     }
+    
 

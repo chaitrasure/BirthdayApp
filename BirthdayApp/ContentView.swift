@@ -17,6 +17,8 @@ struct ContentView: View {
     
     @State private var newBirthday = Date.now
     
+    @State private var selectedFriend: Friend?
+    
     func deleteFriend(at offsets: IndexSet) {
         for index in offsets {
             let friendToDelete = friends[index]
@@ -34,11 +36,19 @@ struct ContentView: View {
                             Spacer()
                             Text(friend.birthday, format: .dateTime.month(.wide).day().year())
                         }
+                        .onTapGesture {
+                            selectedFriend = friend
+                        }
                     }
                 }
                 .onDelete(perform: deleteFriend)
             }
             .navigationTitle("Birthdays")
+            .sheet(item: $selectedFriend) { friend in
+                NavigationStack {
+                    EditFriendView(friend: friend)
+                }
+            }
             .safeAreaInset(edge: .bottom) {
                 VStack(alignment: .center, spacing: 20) {
                     Text("New Birthday")
